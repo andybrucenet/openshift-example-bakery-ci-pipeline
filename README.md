@@ -38,30 +38,50 @@ The final application will uses some Docker images, which will be loaded from Do
 
 ## Create the OpenShift infrastructure
 
+Normally, you will access OpenShift via direct call to `oc`. But, in case of MiniShift or other environment you may need to use different wrapper for `oc`; to handle this, simply define an environment variable that is the OpenShift CLI command to use.
+
+Example:
+
+```
+export OC=oc
+```
+
 First you have to login at your running openshift, like this:
 
-    oc login -u developer -p developer --insecure-skip-tls-verify=true https://MYHOST:8443
+    $OC login -u developer -p developer --insecure-skip-tls-verify=true https://MYHOST:8443
     
 If you doesn't have an existing installation use [MiniShift](https://github.com/minishift/minishift) or create a local cluster with the command:
 
     mkdir -p $OSENV
     echo "create oc cluster for $OSENV"
-    oc cluster up \
-    	 --use-existing-config \
-    	 --host-config-dir=$OSENV/config \
-    	--host-data-dir=$OSENV/data \
-    	--host-pv-dir=$OSENV/vol \
-    	--public-hostname=$(hostname)
+    $OC cluster up \
+       --use-existing-config \
+       --host-config-dir=$OSENV/config \
+      --host-data-dir=$OSENV/data \
+      --host-pv-dir=$OSENV/vol \
+      --public-hostname=$(hostname)
 
 ### Deploy Nexus Registry
 
 First of all we need a working Nexus registry, where we can deploy our maven artifacts and cache some dependency packages. If you doesn't have one, you can create on be the following commands directly in our OpenShift cluster:
 
-    oc new-project ta-nexus
+    $OC new-project ta-nexus
     openshift/infrastructur/nexus/create-nexus.sh
     
 After the deployment is successful you will get a new Nexus. Please note the URL how you can access it. On my local OpenShift cluster it is: `nexus-ta-nexus.10.0.6.193.xip.io`
-     
+
+You can use:
+
+```
+get routes nexus
+```
+
+Here's an example from my box that leverages [jq](https://stedolan.github.io/jq/):
+
+```
+MacBook-Pro:openshift-example-bakery-ci-pipeline l.abruce$ $OC get routes nexus -o json | jq -r '.spec.host'
+nexus-ta-nexus.192.168.64.2.nip.io
+```
  
 ### Create Project Infrastructure and Jenkins Server
 Before you deploy the whole infrastructure we need to configure the following environment variables:
@@ -70,19 +90,35 @@ Before you deploy the whole infrastructure we need to configure the following en
 
 Use the hostname of te nexus repository you wan't to use. In the example above it is `nexus-ta-nexus.10.0.100.201.xip.io`, so execute:
     
-    oc describe route nexus | grep -i request
-    Requested Host:		nexus-ta-nexus.10.0.6.193.xip.io
+    ```
+    $OC describe route nexus | grep -i request
+    Requested Host:    nexus-ta-nexus.10.0.6.193.xip.io
     
     export NEXUS_HOST=nexus-ta-nexus.10.0.6.193.xip.io
+    ```
+
+    Alternatively:
+
+    ```
+    export NEXUS_HOST=$($OC get routes nexus -o json | jq -r '.spec.host')
+    ```
         
 **2) `IMAGE_REG`:**
 As long as OpenShift can only use ImageStream names in DeploymentConfigs and not at normal POD definitions, we have specify the internal used image registry:
 
-    oc get is
+    ```
+    $OC get is
     NAME      DOCKER REPO                   TAGS      UPDATED
     nexus     172.30.1.1:5000/nexus/nexus   2.14.4    5 minutes ago
     
     export IMAGE_REG=172.30.1.1:5000
+		```
+
+		Alternatively:
+
+		```
+		export IMAGE_REG=$($OC get is -o json nexus | jq -r '.status.dockerImageRepository' | awk -F'/' '{print $1}')
+		```
 
 Now execute the script [`openshift/create-openshift-pipeline-infrastructur.sh`](openshift/create-openshift-pipeline-infrastructur.sh) and the following openshift objects will created:
 

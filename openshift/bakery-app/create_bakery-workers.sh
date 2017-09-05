@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+
+OC=${OC:-oc}
+
 cd $(dirname $(realpath $0))
 FOLDER=$(pwd)
 
@@ -28,13 +31,13 @@ function deployOpenshiftObject(){
     app_type=$2
     app_costs=$3
     echo "CREATE DEPLOYMENT for $app_name [type=$app_type]"
-    oc process -f "$TEMPLATE_DEPLOY" \
+    $OC process -f "$TEMPLATE_DEPLOY" \
         -v APP_NAME=$app_name \
         -v APP_TYPE=$app_type \
         -v APP_COSTS=$app_costs \
-        | oc apply -f -
+        | $OC apply -f -
     echo ".... " && sleep 2
-    oc get all -l application=$app_name
+    $OC get all -l application=$app_name
     echo "-------------------------------------------------------------------"
 
 }
@@ -42,7 +45,7 @@ function deployOpenshiftObject(){
 function deleteOpenshiftObject(){
     app_name=$1
     echo "DELETE Config for $app_name"
-    oc delete all -l "application=$app_name"  --grace-period=5
+    $OC delete all -l "application=$app_name"  --grace-period=5
     echo "-------------------------------------------------------------------"
 
 }
@@ -50,24 +53,24 @@ function deleteOpenshiftObject(){
 function buildOpenshiftObject(){
     app_name=$1
     echo "Trigger Build for $app_name"
-    oc delete builds -l application=$app_name
+    $OC delete builds -l application=$app_name
 
-    oc process -f "$TEMPLATE_BUILD" \
+    $OC process -f "$TEMPLATE_BUILD" \
         -v APP_NAME=$app_name \
         -v SOURCE_DOCKERFILE=$BUILD_DOCKERFILE \
         -v NEXUS_HOST=$NEXUS_HOST \
         -v UPDATED="$(date +%Y-%m-%d_%H:%M:%S)" \
-        | oc apply -f -
-    oc start-build "$app_name" --follow --wait
+        | $OC apply -f -
+    $OC start-build "$app_name" --follow --wait
     exit $?
 }
 function buildDeleteOpenshiftObject(){
     app_name=$1
     echo "Trigger DELETE Build for $app_name"
-    oc process -f "$TEMPLATE_BUILD" \
+    $OC process -f "$TEMPLATE_BUILD" \
         -v APP_NAME=$app_name \
         -v SOURCE_DOCKERFILE=$BUILD_DOCKERFILE \
-        | oc delete -f -
+        | $OC delete -f -
     echo "-------------------------------------------------------------------"
 }
 

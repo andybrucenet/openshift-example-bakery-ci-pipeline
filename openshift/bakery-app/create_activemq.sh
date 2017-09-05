@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+
+OC=${OC:-oc}
+
 cd $(dirname $(realpath $0))
 FOLDER=$(pwd)
 
@@ -23,11 +26,11 @@ count=0
 function deployOpenshiftObject(){
     app_name=$1
     echo "CREATE DEPLOYMENT for $app_name"
-    oc process -f "$TEMPLATE_DEPLOY" \
+    $OC process -f "$TEMPLATE_DEPLOY" \
         -v APP_NAME=$app_name \
-        | oc apply -f -
+        | $OC apply -f -
     echo ".... " && sleep 2
-    oc get all -l application=$app_name
+    $OC get all -l application=$app_name
     echo "-------------------------------------------------------------------"
 
 }
@@ -35,11 +38,11 @@ function deployOpenshiftObject(){
 function deleteOpenshiftObject(){
     app_name=$1
     echo "DELETE Config for $app_name"
-    oc delete dc -l "application=$app_name"  --grace-period=5
-    oc delete deployment -l "application=$app_name"  --grace-period=5
-    oc delete pods -l "application=$app_name"  --grace-period=5
-    oc delete service -l "application=$app_name"  --grace-period=5
-    oc delete route -l "application=$app_name"  --grace-period=5
+    $OC delete dc -l "application=$app_name"  --grace-period=5
+    $OC delete deployment -l "application=$app_name"  --grace-period=5
+    $OC delete pods -l "application=$app_name"  --grace-period=5
+    $OC delete service -l "application=$app_name"  --grace-period=5
+    $OC delete route -l "application=$app_name"  --grace-period=5
     echo "-------------------------------------------------------------------"
 
 }
@@ -47,9 +50,9 @@ function deleteOpenshiftObject(){
 function buildDeleteOpenshiftObject(){
     app_name=$1
     echo "Trigger DELETE Build for $app_name"
-    oc process -f "$TEMPLATE_DEPLOY" \
+    $OC process -f "$TEMPLATE_DEPLOY" \
         -v APP_NAME=$app_name \
-        | oc delete -f -
+        | $OC delete -f -
     echo "-------------------------------------------------------------------"
 }
 

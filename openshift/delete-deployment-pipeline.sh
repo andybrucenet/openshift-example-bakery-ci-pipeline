@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+
+OC=${OC:-oc}
+
 cd $(dirname $(realpath $0))
 FOLDER=$(pwd)
 
@@ -26,29 +29,29 @@ echo "ENVS: STAGE=$STAGE"
 function createOpenshiftObject(){
     app_name=$1
     echo "CREATE Config for $app_name"
-    oc process -f "$TEMPLATE" \
+    $OC process -f "$TEMPLATE" \
         -v APP_NAME=$app_name \
         -v STAGE=$STAGE \
-        | oc apply -f -
-    oc get all -l application=$app_name
+        | $OC apply -f -
+    $OC get all -l application=$app_name
 }
 
 function deleteOpenshiftObject(){
     app_name=$1
     echo "DELETE Config for $app_name"
-        oc process -f "$TEMPLATE" \
+        $OC process -f "$TEMPLATE" \
         -v APP_NAME=$app_name \
         -v STAGE=$STAGE \
-        | oc delete -f -
+        | $OC delete -f -
     echo ".... wait" && sleep 3
-    oc delete pod -l jenkins=slave
+    $OC delete pod -l jenkins=slave
 }
 
 function buildOpenshiftObject(){
     app_name=$1
     echo "Trigger Build for $app_name"
-    oc start-build $app_name --follow --wait
-    oc get builds -l application=$app_name
+    $OC start-build $app_name --follow --wait
+    $OC get builds -l application=$app_name
 }
 
 
@@ -69,7 +72,7 @@ function deployToOpenshift() {
 
 }
 
-oc project ta-pipeline-dev
+$OC project ta-pipeline-dev
 deployToOpenshift "bakery-delete-$STAGE-ci"
 
 wait

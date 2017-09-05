@@ -18,3 +18,10 @@ logs
 *.log
 *.sakuli-steps-cache
 *.cache
+
+# some other stuff that is useful to ignore
+*~
+.git
+*.swp
+.localdata
+

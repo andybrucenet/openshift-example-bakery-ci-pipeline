@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+
+OC=${OC:-oc}
+
 if [ -z $OSENV ]; then
     OSENV="$HOME/apps/oc/data/ta-pipeline"
 fi
@@ -8,7 +11,7 @@ mkdir -p $OSENV/vol
 echo "using openshift data space 'OSENV': $OSENV"
 
 echo "create oc cluster for $OSENV"
-oc cluster up \
+$OC cluster up \
 	 --version='v3.6.0' \
 	 --use-existing-config=true \
 	 --host-config-dir=$OSENV/config \

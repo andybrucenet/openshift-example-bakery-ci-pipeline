@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+
+OC=${OC:-oc}
+
 cd $(dirname $(realpath $0))
 FOLDER=$(pwd)
 
@@ -14,5 +17,5 @@ echo "target stage: $TARGET_STAGE"
 echo "IMAGE: $IMAGE_NAME"
 echo "PROJECT_PREFIX: $PROJECT_PREFIX"
 
-oc tag "$PROJECT_PREFIX-$SOURCE_STAGE/$IMAGE_NAME" "$PROJECT_PREFIX-$TARGET_STAGE/$IMAGE_NAME"
+$OC tag "$PROJECT_PREFIX-$SOURCE_STAGE/$IMAGE_NAME" "$PROJECT_PREFIX-$TARGET_STAGE/$IMAGE_NAME"
 exit $?

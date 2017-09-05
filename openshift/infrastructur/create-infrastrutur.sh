@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+OC=${OC:-oc}
+
 cd $(dirname $(realpath $0))
 FOLDER=$(pwd)
 echo "ARGS: $1"
@@ -21,13 +23,13 @@ fi
 
 if [[ $1 =~ delete ]]; then
     echo "============= DELETE INFRASTRUCTUR =================="
-    oc process -f $FOLDER/jenkins.yml \
+    $OC process -f $FOLDER/jenkins.yml \
         -v NEXUS_HOST=${NEXUS_HOST} \
         -v IMAGE_REG=${IMAGE_REG} \
-        | oc delete -f -
+        | $OC delete -f -
     echo "tried to delete not persistent content"
     if [[ $1 =~ delete-all ]]; then
-        oc process -f $FOLDER/jenkins.persistent.yml | oc delete -f -
+        $OC process -f $FOLDER/jenkins.persistent.yml | $OC delete -f -
         echo "tried to delete persistent content"
     fi
     exit 0
@@ -37,8 +39,8 @@ echo "============= CREATE INFRASTRUCTUR =================="
 echo "NEXUS_HOST=${NEXUS_HOST}"
 echo "IMAGE_REG=${IMAGE_REG}"
 
-oc process -f $FOLDER/jenkins.persistent.yml | oc apply -f - \
-    && oc process -f $FOLDER/jenkins.yml \
+$OC process -f $FOLDER/jenkins.persistent.yml | $OC apply -f - \
+    && $OC process -f $FOLDER/jenkins.yml \
             -v NEXUS_HOST=${NEXUS_HOST} \
             -v IMAGE_REG=${IMAGE_REG} \
-            | oc apply -f -
+            | $OC apply -f -

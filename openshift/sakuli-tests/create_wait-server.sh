@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+
+OC=${OC:-oc}
+
 cd $(dirname $(realpath $0))
 FOLDER=$(pwd)
 
@@ -47,14 +50,14 @@ count=0
 function deployOpenshiftObject(){
     app_name=$1
     echo "CREATE DEPLOYMENT for $app_name"
-    oc delete pods -l "application=$app_name"  --grace-period=0
+    $OC delete pods -l "application=$app_name"  --grace-period=0
     echo ".... " && sleep 2
-    oc process -f "$TEMPLATE_DEPLOY" \
+    $OC process -f "$TEMPLATE_DEPLOY" \
         -v IMAGE_PREFIX=$IMAGE_PREFIX \
         -v APP_NAME=$app_name \
         -v BAKERY_REPORT_URL=$BAKERY_REPORT_URL \
         -v BAKERY_BAKERY_URL=$BAKERY_BAKERY_URL \
-        | oc apply -f -
+        | $OC apply -f -
     
     $FOLDER/validate_pod-state.sh $app_name
 
@@ -65,30 +68,30 @@ function deployOpenshiftObject(){
 function deleteOpenshiftObject(){
     app_name=$1
     echo "DELETE Config for $app_name"
-    oc delete pods -l "application=$app_name"  --grace-period=5
+    $OC delete pods -l "application=$app_name"  --grace-period=5
     echo "-------------------------------------------------------------------"
 
 }
 
 function buildOpenshiftObject(){
     echo "Trigger Build for $IMAGE_NAME"
-    oc delete builds -l application=$IMAGE_NAME
+    $OC delete builds -l application=$IMAGE_NAME
 
-    oc process -f "$TEMPLATE_BUILD" \
+    $OC process -f "$TEMPLATE_BUILD" \
         -v IMAGE=$IMAGE_NAME \
         -v SOURCE_DOCKERFILE=$SOURCE_DOCKERFILE \
         -v SOURCE_DOCKER_CONTEXT_DIR=$SOURCE_DOCKER_CONTEXT_DIR \
-        | oc apply -f -
-    oc start-build "$IMAGE_NAME" --follow --wait
+        | $OC apply -f -
+    $OC start-build "$IMAGE_NAME" --follow --wait
     exit $?
 }
 function buildDeleteOpenshiftObject(){
     echo "Trigger DELETE Build for $IMAGE_NAME"
-    oc process -f "$TEMPLATE_BUILD" \
+    $OC process -f "$TEMPLATE_BUILD" \
         -v IMAGE=$IMAGE_NAME \
         -v SOURCE_DOCKERFILE=$SOURCE_DOCKERFILE \
         -v SOURCE_DOCKER_CONTEXT_DIR=$SOURCE_DOCKER_CONTEXT_DIR \
-        | oc delete -f -
+        | $OC delete -f -
     echo "-------------------------------------------------------------------"
 }
 
