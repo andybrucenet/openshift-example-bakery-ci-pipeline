@@ -40,13 +40,13 @@ The final application will uses some Docker images, which will be loaded from Do
 
 Normally, you will access OpenShift via direct call to `oc`. But, in case of MiniShift or other environment you may need to use different wrapper for `oc`; to handle this, simply define an environment variable that is the OpenShift CLI command to use.
 
-Example:
+Example to use the normal `oc` command:
 
 ```
 export OC=oc
 ```
 
-First you have to login at your running openshift, like this:
+Once your `OC` variable is set, you next login to your running openshift, similar to this:
 
     $OC login -u developer -p developer --insecure-skip-tls-verify=true https://MYHOST:8443
     
@@ -112,13 +112,13 @@ As long as OpenShift can only use ImageStream names in DeploymentConfigs and not
     nexus     172.30.1.1:5000/nexus/nexus   2.14.4    5 minutes ago
     
     export IMAGE_REG=172.30.1.1:5000
-		```
+    ```
 
-		Alternatively:
+    Alternatively:
 
-		```
-		export IMAGE_REG=$($OC get is -o json nexus | jq -r '.status.dockerImageRepository' | awk -F'/' '{print $1}')
-		```
+    ```
+    export IMAGE_REG=$($OC get is -o json nexus | jq -r '.status.dockerImageRepository' | awk -F'/' '{print $1}')
+    ```
 
 Now execute the script [`openshift/create-openshift-pipeline-infrastructur.sh`](openshift/create-openshift-pipeline-infrastructur.sh) and the following openshift objects will created:
 
