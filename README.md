@@ -79,7 +79,12 @@ get routes nexus
 Here's an example from my box that leverages [jq](https://stedolan.github.io/jq/):
 
 ```
-MacBook-Pro:openshift-example-bakery-ci-pipeline l.abruce$ $OC get routes nexus -o json | jq -r '.spec.host'
+$OC get routes nexus -o json | jq -r '.spec.host'
+```
+
+This returns:
+
+```
 nexus-ta-nexus.192.168.64.2.nip.io
 ```
  
@@ -87,41 +92,45 @@ nexus-ta-nexus.192.168.64.2.nip.io
 Before you deploy the whole infrastructure we need to configure the following environment variables:
 
 **1) `NEXUS_HOST`:**
-
 Use the hostname of te nexus repository you wan't to use. In the example above it is `nexus-ta-nexus.10.0.100.201.xip.io`, so execute:
     
-    ```
-    $OC describe route nexus | grep -i request
-    Requested Host:    nexus-ta-nexus.10.0.6.193.xip.io
+```
+$OC describe route nexus | grep -i request
+Requested Host:    nexus-ta-nexus.10.0.6.193.xip.io
     
-    export NEXUS_HOST=nexus-ta-nexus.10.0.6.193.xip.io
-    ```
+export NEXUS_HOST=nexus-ta-nexus.10.0.6.193.xip.io
+```
 
-    Alternatively:
+Alternatively:
 
-    ```
-    export NEXUS_HOST=$($OC get routes nexus -o json | jq -r '.spec.host')
-    ```
+```
+export NEXUS_HOST=$($OC get routes nexus -o json | jq -r '.spec.host')
+```
         
 **2) `IMAGE_REG`:**
 As long as OpenShift can only use ImageStream names in DeploymentConfigs and not at normal POD definitions, we have specify the internal used image registry:
 
-    ```
-    $OC get is
-    NAME      DOCKER REPO                   TAGS      UPDATED
-    nexus     172.30.1.1:5000/nexus/nexus   2.14.4    5 minutes ago
+```
+$OC get is
+NAME      DOCKER REPO                   TAGS      UPDATED
+nexus     172.30.1.1:5000/nexus/nexus   2.14.4    5 minutes ago
     
-    export IMAGE_REG=172.30.1.1:5000
-    ```
+export IMAGE_REG=172.30.1.1:5000
+```
 
-    Alternatively:
+Alternatively:
 
-    ```
-    export IMAGE_REG=$($OC get is -o json nexus | jq -r '.status.dockerImageRepository' | awk -F'/' '{print $1}')
-    ```
+```
+export IMAGE_REG=$($OC get is -o json nexus | jq -r '.status.dockerImageRepository' | awk -F'/' '{print $1}')
+```
 
-Now execute the script [`openshift/create-openshift-pipeline-infrastructur.sh`](openshift/create-openshift-pipeline-infrastructur.sh) and the following openshift objects will created:
+Now execute the script:
 
+```
+openshift/create-openshift-pipeline-infrastructur.sh
+```
+
+The above creates the following objects:
 * One project for each stage: `ta-pipeline-dev`, `ta-pipeline-qa`, `ta-pipeline-prod`
 * Service-Accounts `cd-agent`, `jenkins` to be able to trigger deployments in all stages 
 * Jenkins Server 
